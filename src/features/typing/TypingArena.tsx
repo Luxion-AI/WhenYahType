@@ -7,6 +7,7 @@ import { playKeyClick } from '../../lib/sound';
 import { requestRunTicket, submitRunScore } from '../../lib/supabase';
 import { saveLocalRun, updatePersonalBest } from '../../lib/storage';
 import { useAuth } from '../auth/AuthContext';
+import { WaifuCompanion } from './WaifuCompanion';
 
 interface TypingArenaProps {
   mode: Mode;
@@ -383,6 +384,16 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           <div className="hud-label">When Yahs</div>
         </div>
       </div>
+
+      {/* Waifu Cheerleader Companion */}
+      <WaifuCompanion
+        isRunning={isRunning}
+        isFinished={isFinished}
+        wpm={liveStats.wpm}
+        accuracy={liveStats.accuracy}
+        errors={liveStats.errors}
+        phraseCount={liveStats.phraseCount}
+      />
 
       {/* Typing Display Arena */}
       <div

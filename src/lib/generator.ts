@@ -3,17 +3,13 @@ import { TypingStats } from '../types/typing';
 export const PHRASE = 'When Yah';
 
 /**
- * Deterministic PRNG and text stream generator.
- * Produces identical stream across client and Edge Functions for reproducible tests.
+ * Deterministic text stream generator.
+ * Produces clean single-space separated phrases across client and server.
  */
-export function generateTargetText(length = 3000, seed = 0): string {
+export function generateTargetText(length = 3000, _seed = 0): string {
   let out = '';
-  let x = (seed + 0x6D2B79F5) >>> 0;
   while (out.length < length) {
-    x = Math.imul(x ^ (x >>> 15), x | 1);
-    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
-    const extraSpace = ((x ^ (x >>> 14)) >>> 0) % 17 === 0;
-    out += PHRASE + (extraSpace ? '  ' : ' ');
+    out += PHRASE + ' ';
   }
   return out.trimEnd();
 }

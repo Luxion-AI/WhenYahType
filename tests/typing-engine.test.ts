@@ -24,11 +24,10 @@ describe('Typing Engine & Text Generator', () => {
     expect(textA).toContain('When Yah');
   });
 
-  it('produces different spacing sequences for different seeds', () => {
-    const text1 = generateTargetText(500, 100);
-    const text2 = generateTargetText(500, 999);
-    // Both contain When Yah, but spacing/patterns differ
-    expect(text1).not.toBe(text2);
+  it('generates consistent single-spaced phrases', () => {
+    const text = generateTargetText(100, 0);
+    expect(text.includes('  ')).toBe(false);
+    expect(text.startsWith('When Yah When Yah')).toBe(true);
   });
 
   it('calculates 100% accuracy and correct WPM on flawless input', () => {
