@@ -13,6 +13,44 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    proxy: {
+      '/api/booru/konachan': {
+        target: 'https://konachan.net',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/booru\/konachan/, ''),
+      },
+      '/api/booru/safebooru': {
+        target: 'https://safebooru.org',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/booru\/safebooru/, ''),
+      },
+      '/api/booru/yande': {
+        target: 'https://yande.re',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/booru\/yande/, ''),
+      },
+    },
+  },
+  preview: {
+    port: 4173,
+    host: true,
+    proxy: {
+      '/api/booru/konachan': {
+        target: 'https://konachan.net',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/booru\/konachan/, ''),
+      },
+      '/api/booru/safebooru': {
+        target: 'https://safebooru.org',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/booru\/safebooru/, ''),
+      },
+      '/api/booru/yande': {
+        target: 'https://yande.re',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/booru\/yande/, ''),
+      },
+    },
   },
   test: {
     environment: 'happy-dom',

@@ -3,6 +3,24 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/api/booru/konachan/*"
+  to = "https://konachan.net/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/booru/safebooru/*"
+  to = "https://safebooru.org/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/booru/yande/*"
+  to = "https://yande.re/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
@@ -15,7 +33,7 @@
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' data: https:;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://safebooru.org https://konachan.net https://yande.re; img-src 'self' data: https: blob:;"
 
 [[headers]]
   for = "/assets/*"

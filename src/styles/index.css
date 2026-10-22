@@ -796,7 +796,31 @@ html, body {
 .deck-controls {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.deck-controls .btn-pixel-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  font-family: var(--font-pixel);
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.btn-search-waifu {
+  background-color: rgba(255, 79, 154, 0.15) !important;
+  border-color: var(--accent-waifu-pink) !important;
+  color: #fff !important;
+}
+
+.btn-search-waifu:hover {
+  background-color: var(--accent-waifu-pink) !important;
+  color: #0b0d16 !important;
+  border-color: #fff !important;
+  box-shadow: 2px 2px 0px var(--accent-gold) !important;
 }
 
 .btn-active {
@@ -1330,6 +1354,375 @@ html, body {
 .modal-close-btn:hover {
   border-color: var(--accent-gold);
   color: var(--accent-gold);
+}
+
+/* ==========================================================================
+   Waifu Search & Companion Gallery Modal
+   ========================================================================== */
+.waifu-search-modal-card {
+  max-width: 900px;
+  width: 95vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 0.85rem;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.waifu-search-desc {
+  font-family: var(--font-retro);
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.waifu-search-desc strong {
+  color: var(--accent-neon-cyan);
+}
+
+.waifu-search-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.waifu-search-field {
+  width: 100%;
+  padding-left: 2.3rem !important;
+  padding-right: 2.2rem !important;
+  height: 42px;
+  font-family: var(--font-retro);
+  font-size: 1.05rem !important;
+  box-sizing: border-box;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.65rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.clear-search-btn:hover {
+  color: var(--color-error);
+}
+
+.search-action-btn {
+  height: 42px;
+  padding: 0 1.25rem;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.waifu-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.preset-tags-scroll {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 3px;
+  scrollbar-width: thin;
+}
+
+.tag-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.6rem;
+  background-color: var(--bg-input);
+  border: 1.5px solid var(--pixel-border-color);
+  color: var(--text-muted);
+  font-family: var(--font-pixel);
+  font-size: 0.58rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 100ms ease;
+}
+
+.tag-pill-btn:hover {
+  border-color: var(--accent-gold);
+  color: #fff;
+  background-color: rgba(255, 216, 77, 0.08);
+}
+
+.tag-pill-btn.active {
+  background-color: rgba(255, 216, 77, 0.18);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  box-shadow: 2px 2px 0px #000;
+}
+
+.waifu-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.pixel-select {
+  background-color: var(--bg-input);
+  border: 2px solid var(--pixel-border-color);
+  color: var(--text-main);
+  font-family: var(--font-pixel);
+  font-size: 0.62rem;
+  padding: 0.35rem 0.55rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 100ms ease;
+}
+
+.pixel-select:hover,
+.pixel-select:focus {
+  border-color: var(--accent-gold);
+}
+
+.custom-url-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.58rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.custom-url-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem;
+  background-color: var(--bg-input);
+  border: 2px dashed var(--accent-waifu-pink);
+  box-shadow: 3px 3px 0px #000;
+}
+
+.custom-url-fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.5rem;
+}
+
+.waifu-gallery-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 280px;
+  max-height: 48vh;
+  padding: 0.45rem;
+  background-color: rgba(0, 0, 0, 0.28);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  scrollbar-width: thin;
+}
+
+.waifu-gallery-loading,
+.waifu-gallery-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 240px;
+  color: var(--text-muted);
+  font-family: var(--font-retro);
+  font-size: 1.15rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.waifu-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 0.85rem;
+}
+
+.waifu-card-item {
+  position: relative;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--pixel-border-color);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.waifu-card-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-waifu-pink);
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.75);
+}
+
+.waifu-card-item.selected {
+  border: 2px solid var(--accent-gold);
+  box-shadow: 0 0 12px rgba(255, 216, 77, 0.35), 3px 3px 0px #000;
+}
+
+.card-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/5;
+  overflow: hidden;
+  background-color: #07090e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 220ms ease;
+  display: block;
+}
+
+.waifu-card-item:hover .card-thumb-img {
+  transform: scale(1.05);
+}
+
+.card-orientation-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-pixel);
+  font-size: 0.52rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 2px;
+  z-index: 3;
+  letter-spacing: 0.04em;
+}
+
+.card-orientation-badge.port {
+  background-color: rgba(55, 231, 231, 0.9);
+  color: #07090e;
+  font-weight: 700;
+}
+
+.card-orientation-badge.land {
+  background-color: rgba(255, 216, 77, 0.9);
+  color: #07090e;
+  font-weight: 700;
+}
+
+.card-selected-banner {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  padding: 0.18rem 0.45rem;
+  background-color: var(--accent-gold);
+  color: #07090e;
+  font-weight: 700;
+  border-radius: 2px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+  z-index: 3;
+}
+
+.card-meta-wrap {
+  padding: 0.55rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background-color: rgba(11, 13, 22, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.card-waifu-name {
+  font-family: var(--font-pixel);
+  font-size: 0.64rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.card-sub-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-retro);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.card-source-tag {
+  color: var(--accent-waifu-pink);
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  font-weight: 600;
+}
+
+.card-res-tag {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+}
+
+.waifu-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.08);
+  margin-top: auto;
+}
+
+@media (max-width: 680px) {
+  .waifu-search-modal-card {
+    padding: 1rem;
+    max-height: 94vh;
+  }
+  .custom-url-fields {
+    grid-template-columns: 1fr;
+  }
+  .waifu-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.5rem;
+  }
 }
 
 /* Forms */
