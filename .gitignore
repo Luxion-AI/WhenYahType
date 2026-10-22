@@ -34,3 +34,6 @@ dist-ssr
 # Supabase local secrets
 .supabase/
 supabase/.temp/
+
+# Netlify local cache
+.netlify/
