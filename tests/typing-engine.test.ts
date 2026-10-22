@@ -74,4 +74,23 @@ describe('Typing Engine & Text Generator', () => {
     expect(seconds).toBeGreaterThanOrEqual(0);
     expect(seconds).toBeLessThan(60);
   });
+
+  it('determines combo streaks correctly', () => {
+    const target = 'When Yah When Yah ';
+    let combo = 0;
+    let maxCombo = 0;
+
+    for (let i = 0; i < target.length; i++) {
+      if (i === 10) {
+        // intentional typo at index 10
+        combo = 0;
+      } else {
+        combo++;
+        maxCombo = Math.max(maxCombo, combo);
+      }
+    }
+
+    expect(maxCombo).toBe(10);
+    expect(combo).toBe(target.length - 11);
+  });
 });

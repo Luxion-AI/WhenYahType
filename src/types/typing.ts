@@ -41,6 +41,7 @@ export interface RunResult {
   correct: number;
   errors: number;
   elapsedMs: number;
+  bestCombo?: number;
   isPersonalBest?: boolean;
   status: SubmissionStatus;
   errorMessage?: string;

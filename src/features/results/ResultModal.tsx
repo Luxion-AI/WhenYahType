@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, 
   RotateCcw, 
@@ -7,7 +7,9 @@ import {
   ShieldCheck, 
   AlertTriangle, 
   Award, 
-  ExternalLink
+  ExternalLink,
+  Flame,
+  Sparkles
 } from 'lucide-react';
 import { RunResult } from '../../types/typing';
 
@@ -42,23 +44,49 @@ export const ResultModal: React.FC<ResultModalProps> = ({
     return () => window.removeEventListener('keydown', handleModalKeyDown);
   }, [result, onRestart, onClose]);
 
+  const mascotReaction = useMemo(() => {
+    if (!result) return { sprite: '/assets/character/yah-chan-idle.svg', title: 'Solid Effort!' };
+    if (result.isPersonalBest || result.wpm >= 90) {
+      return {
+        sprite: '/assets/character/yah-chan-victory.svg',
+        title: 'GODLIKE SPEED! 👑',
+      };
+    }
+    if (result.wpm >= 60 || result.accuracy >= 96) {
+      return {
+        sprite: '/assets/character/yah-chan-cheer.svg',
+        title: 'SUGOI! ON FIRE! ★',
+      };
+    }
+    if (result.errors > 8 || result.accuracy < 85) {
+      return {
+        sprite: '/assets/character/yah-chan-panic.svg',
+        title: 'DON\'T GIVE UP! 💢',
+      };
+    }
+    return {
+      sprite: '/assets/character/yah-chan-idle.svg',
+      title: 'GREAT RUN! ♪',
+    };
+  }, [result]);
+
   if (!result) return null;
 
   // Humor caption
   let memeCaption = 'The waiting continues.';
   if (result.wpm >= 140) {
-    memeCaption = 'Touch grass immediately. Your fingers have ascended.';
+    memeCaption = 'Touch grass immediately. Your fingers have ascended past mortal realms.';
   } else if (result.wpm >= 110) {
-    memeCaption = 'Certified When Yah Enjoyer. Top tier pacing.';
+    memeCaption = 'Certified When Yah Legend. The keyboard was begging for mercy.';
   } else if (result.wpm >= 80) {
-    memeCaption = 'Your fingers. Your destiny. Speed is respectable.';
+    memeCaption = 'Your fingers. Your destiny. Speed is fiercely respectable.';
   } else if (result.wpm >= 50) {
-    memeCaption = 'Ready to suffer? Practice makes faster.';
+    memeCaption = 'Ready to suffer? Practice makes faster. Keep rhythm!';
   } else {
     memeCaption = 'Skill issue detected. Wait harder.';
   }
 
-  const shareText = `I survived ${result.duration}s of When Yah with ${result.wpm} WPM and ${result.accuracy}% accuracy (${result.phraseCount} When Yahs typed)! 💀\nPlay at: https://whenyahtype.netlify.app`;
+  const shareText = `I survived ${result.duration}s of When Yah with ${result.wpm} WPM and ${result.accuracy}% accuracy (${result.phraseCount} When Yahs typed, max combo ${result.bestCombo || 0})! 💀\nPlay at: https://whenyahtype.netlify.app`;
 
   const handleCopy = async () => {
     try {
@@ -89,19 +117,37 @@ export const ResultModal: React.FC<ResultModalProps> = ({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card result-modal-card" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="result-header">
-          {result.isPersonalBest && (
-            <div className="pb-banner">
-              <Trophy size={16} />
-              <span>NEW PERSONAL BEST!</span>
-            </div>
-          )}
+        {/* PB Banner */}
+        {result.isPersonalBest && (
+          <div className="pb-banner">
+            <Trophy size={16} />
+            <span>NEW PERSONAL BEST RECORD!</span>
+          </div>
+        )}
 
-          <h2 className="result-main-title">
-            {result.wpm} <span className="unit">WPM</span>
-          </h2>
-          <p className="result-caption">"{memeCaption}"</p>
+        {/* Mascot & Score Showcase */}
+        <div className="result-showcase-row">
+          <div className="result-mascot-box">
+            <img
+              src={mascotReaction.sprite}
+              alt="Yah-chan Reaction"
+              className="result-mascot-img"
+            />
+            <div className="result-mascot-tag">
+              <Sparkles size={11} className="text-arcade-gold" />
+              <span>{mascotReaction.title}</span>
+            </div>
+          </div>
+
+          <div className="result-hero-text">
+            <div className="result-mode-tag">
+              <span>{result.mode.toUpperCase()} · {result.duration}S ARCADE MATCH</span>
+            </div>
+            <h2 className="result-main-title">
+              {result.wpm} <span className="unit">WPM</span>
+            </h2>
+            <p className="result-caption">"{memeCaption}"</p>
+          </div>
         </div>
 
         {/* Verification Status Banner */}
@@ -115,7 +161,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
           {result.status === 'verified' && (
             <div className="status-badge verified">
               <ShieldCheck size={16} />
-              <span>Verified Official Score · Saved to Global Leaderboard</span>
+              <span>Verified Official Score · Saved to Global High-Score Board</span>
             </div>
           )}
           {result.status === 'rejected' && (
@@ -126,7 +172,7 @@ export const ResultModal: React.FC<ResultModalProps> = ({
           )}
           {result.status === 'offline_saved' && (
             <div className="status-badge offline">
-              <span>Local Score Recorded · Sign in to compete globally</span>
+              <span>Guest Local Score Recorded · Sign in to compete on global ranks</span>
             </div>
           )}
         </div>
@@ -139,21 +185,29 @@ export const ResultModal: React.FC<ResultModalProps> = ({
           </div>
 
           <div className="metric-box">
+            <span className="metric-title">Best Combo</span>
+            <span className="metric-val combo-val">
+              <Flame size={14} className="text-pink inline-icon" />
+              {result.bestCombo ?? 0}
+            </span>
+          </div>
+
+          <div className="metric-box">
             <span className="metric-title">Raw WPM</span>
             <span className="metric-val">{result.rawWpm}</span>
           </div>
 
           <div className="metric-box">
-            <span className="metric-title">Characters</span>
-            <span className="metric-val">
-              <span className="correct-count">{result.correct}</span> /{' '}
-              <span className="error-count">{result.errors}</span>
-            </span>
-          </div>
-
-          <div className="metric-box">
             <span className="metric-title">When Yahs</span>
             <span className="metric-val">{result.phraseCount}</span>
+          </div>
+
+          <div className="metric-box full-span">
+            <span className="metric-title">Keystroke Breakdown</span>
+            <span className="metric-val sm">
+              <span className="correct-count">{result.correct} correct</span> /{' '}
+              <span className="error-count">{result.errors} mistakes</span>
+            </span>
           </div>
         </div>
 

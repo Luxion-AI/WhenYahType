@@ -10,7 +10,7 @@ import { ResultModal } from './features/results/ResultModal';
 import { AuthModal } from './features/auth/AuthModal';
 import { AuthProvider } from './features/auth/AuthContext';
 import { Duration, Mode, RunResult, TypingSettings } from './types/typing';
-import { loadSettings } from './lib/storage';
+import { loadSettings, saveSettings } from './lib/storage';
 
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('arena');
@@ -69,6 +69,12 @@ const AppContent: React.FC = () => {
         activeTab={activeTab}
         onNavigate={(tab) => navigateTo(tab)}
         onOpenAuth={() => setAuthModalOpen(true)}
+        soundEnabled={settings.soundEnabled}
+        onToggleSound={() => {
+          const updated = { ...settings, soundEnabled: !settings.soundEnabled };
+          setSettings(updated);
+          saveSettings(updated);
+        }}
       />
 
       <main className="main-content">

@@ -5,7 +5,9 @@ import {
   Flame, 
   User, 
   Sliders, 
-  LogIn 
+  LogIn,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 
@@ -15,9 +17,17 @@ interface NavbarProps {
   activeTab: NavTab;
   onNavigate: (tab: NavTab) => void;
   onOpenAuth: () => void;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, onNavigate, onOpenAuth }) => {
+export const Navbar: React.FC<NavbarProps> = ({ 
+  activeTab, 
+  onNavigate, 
+  onOpenAuth,
+  soundEnabled = true,
+  onToggleSound,
+}) => {
   const { user, username, isGuest, isConfigured } = useAuth();
 
   return (
@@ -100,6 +110,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onNavigate, onOpenAut
 
         {/* Right Action: Auth & Status */}
         <div className="nav-actions">
+          {/* Sound Mute/Unmute Toggle */}
+          {onToggleSound && (
+            <button
+              type="button"
+              className="btn-pixel-icon sound-quick-toggle"
+              onClick={onToggleSound}
+              title={soundEnabled ? 'Mute Audio Effects' : 'Enable Audio Effects'}
+              aria-label={soundEnabled ? 'Mute Audio Effects' : 'Enable Audio Effects'}
+            >
+              {soundEnabled ? <Volume2 size={13} className="text-arcade-gold" /> : <VolumeX size={13} />}
+            </button>
+          )}
+
           {/* Supabase backend status pill */}
           <div className="status-indicator-pill" title={isConfigured ? 'Supabase backend connected' : 'Local storage mode'}>
             <span className={`status-dot ${isConfigured ? 'connected' : 'offline'}`} />

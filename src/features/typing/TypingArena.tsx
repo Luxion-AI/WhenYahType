@@ -37,6 +37,11 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   const [ticket, setTicket] = useState<RunTicket | null>(null);
   const [ticketLoading, setTicketLoading] = useState<boolean>(false);
 
+  // Combo & Streak Tracking
+  const [combo, setCombo] = useState<number>(0);
+  const [bestCombo, setBestCombo] = useState<number>(0);
+  const [isPbAchieved, setIsPbAchieved] = useState<boolean>(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -85,6 +90,9 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     setIsRunning(false);
     setIsFinished(false);
     setRemainingTime(activeDuration);
+    setCombo(0);
+    setBestCombo(0);
+    setIsPbAchieved(false);
     startTimeRef.current = null;
     endTimeRef.current = null;
     isSubmittingRef.current = false;
@@ -106,7 +114,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   }, [duration, mode, resetTrigger, resetRun]);
 
   // Handle run completion
-  const handleFinish = useCallback(async (finalTyped: string, startMs: number, endMs: number) => {
+  const handleFinish = useCallback(async (finalTyped: string, startMs: number, endMs: number, finalBestCombo: number) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
 
@@ -123,17 +131,24 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     const stats = calculateStats(finalTyped, targetText, elapsedSeconds);
 
     const isPb = updatePersonalBest(activeDuration, stats.wpm);
+    setIsPbAchieved(isPb);
+
     if (isPb && stats.wpm > 20) {
+      if (settings.soundEnabled) {
+        playKeyClick('pb', settings.soundVolume);
+      }
       try {
         confetti({
-          particleCount: 80,
-          spread: 70,
+          particleCount: 90,
+          spread: 75,
           origin: { y: 0.6 },
-          colors: ['#f59e0b', '#fbbf24', '#ffffff', '#ffd84d'],
+          colors: ['#ffd84d', '#37e7e7', '#ff4f9a', '#f5f3e8'],
         });
       } catch {
         // Ignore
       }
+    } else if (stats.wpm >= 40 && settings.soundEnabled) {
+      playKeyClick('fanfare', settings.soundVolume);
     }
 
     // Prepare preliminary result object
@@ -147,6 +162,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
       correct: stats.correct,
       errors: stats.errors,
       elapsedMs,
+      bestCombo: finalBestCombo,
       isPersonalBest: isPb,
       status: ticket ? 'validating' : 'offline_saved',
       createdAt: new Date().toISOString(),
@@ -194,7 +210,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
         });
       }
     }
-  }, [activeDuration, mode, targetText, ticket, onRunComplete]);
+  }, [activeDuration, mode, targetText, ticket, settings.soundEnabled, settings.soundVolume, onRunComplete]);
 
   // Key stroke handler
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -232,7 +248,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           endTimeRef.current = endNow;
           // Capture current typed text from DOM directly to avoid state race
           const latestTyped = inputRef.current?.value || '';
-          handleFinish(latestTyped, startTimeRef.current, endNow);
+          setBestCombo((currBest) => {
+            handleFinish(latestTyped, startTimeRef.current!, endNow, currBest);
+            return currBest;
+          });
         }
       }, 100);
     }
@@ -244,16 +263,34 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     const prevLen = typed.length;
     const newLen = value.length;
 
-    // Play tactile sound
-    if (settings.soundEnabled && newLen > prevLen) {
+    // Keystroke sound & combo processing
+    if (newLen > prevLen) {
       const char = value[newLen - 1];
       const targetChar = targetText[newLen - 1];
-      if (char === ' ') {
-        playKeyClick('space', settings.soundVolume);
-      } else if (char === targetChar) {
-        playKeyClick('correct', settings.soundVolume);
+
+      if (char === targetChar) {
+        const nextCombo = combo + 1;
+        setCombo(nextCombo);
+        setBestCombo((prev) => Math.max(prev, nextCombo));
+
+        // Combo tier milestones: 10, 25, 50, 100
+        if ([10, 25, 50, 100].includes(nextCombo)) {
+          if (settings.soundEnabled) {
+            playKeyClick('combo_tier_up', settings.soundVolume);
+          }
+        } else if (settings.soundEnabled) {
+          if (char === ' ') {
+            playKeyClick('space', settings.soundVolume);
+          } else {
+            playKeyClick('correct', settings.soundVolume);
+          }
+        }
       } else {
-        playKeyClick('error', settings.soundVolume);
+        // Typo resets combo
+        setCombo(0);
+        if (settings.soundEnabled) {
+          playKeyClick('error', settings.soundVolume);
+        }
       }
     }
 
@@ -306,7 +343,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
 
   return (
     <div className="typing-arena-container">
-      {/* Top Controls Bar */}
+      {/* Top Arcade Controls Bar */}
       <div className="typing-controls-bar">
         {/* Mode Selector */}
         <div className="segmented-control mode-selector">
@@ -364,7 +401,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
         </div>
       </div>
 
-      {/* Live Stats HUD */}
+      {/* Retro Arcade HUD */}
       <div className="typing-hud">
         <div className="hud-metric main-metric">
           <div className="hud-value accent-text">{remainingTime}</div>
@@ -385,9 +422,26 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
           <div className="hud-value">{isRunning ? liveStats.phraseCount : '-'}</div>
           <div className="hud-label">When Yahs</div>
         </div>
+
+        <div className="hud-metric combo-metric">
+          <div className={`hud-value ${combo >= 25 ? 'combo-fire' : ''}`}>
+            {isRunning ? combo : bestCombo > 0 ? bestCombo : '-'}
+          </div>
+          <div className="hud-label">
+            {combo >= 100
+              ? '★ MACHINE'
+              : combo >= 50
+              ? 'UNSTOPPABLE'
+              : combo >= 25
+              ? 'RHYTHM'
+              : combo >= 10
+              ? 'WARMING UP'
+              : 'Combo Streak'}
+          </div>
+        </div>
       </div>
 
-      {/* Waifu Cheerleader Companion */}
+      {/* Waifu / Yah-chan Cheerleader Companion Stage */}
       <WaifuCompanion
         isRunning={isRunning}
         isFinished={isFinished}
@@ -395,6 +449,9 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
         accuracy={liveStats.accuracy}
         errors={liveStats.errors}
         phraseCount={liveStats.phraseCount}
+        combo={combo}
+        bestCombo={bestCombo}
+        isPersonalBest={isPbAchieved}
       />
 
       {/* Typing Display Arena */}
