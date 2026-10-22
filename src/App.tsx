@@ -21,6 +21,12 @@ const AppContent: React.FC = () => {
   const [mode, setMode] = useState<Mode>('classic');
   const [duration, setDuration] = useState<Duration>(30);
   const [latestResult, setLatestResult] = useState<RunResult | null>(null);
+  const [arenaResetTrigger, setArenaResetTrigger] = useState<number>(0);
+
+  const handleRestartRun = () => {
+    setLatestResult(null);
+    setArenaResetTrigger((prev) => prev + 1);
+  };
 
   // Sync hash with navigation
   useEffect(() => {
@@ -74,6 +80,7 @@ const AppContent: React.FC = () => {
             onModeChange={setMode}
             settings={settings}
             onRunComplete={handleRunComplete}
+            resetTrigger={arenaResetTrigger}
           />
         )}
 
@@ -113,10 +120,10 @@ const AppContent: React.FC = () => {
       {/* Result Summary Modal */}
       <ResultModal
         result={latestResult}
-        onClose={() => setLatestResult(null)}
-        onRestart={() => setLatestResult(null)}
+        onClose={handleRestartRun}
+        onRestart={handleRestartRun}
         onViewLeaderboard={() => {
-          setLatestResult(null);
+          handleRestartRun();
           navigateTo('leaderboard');
         }}
       />

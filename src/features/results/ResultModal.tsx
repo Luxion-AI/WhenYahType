@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Trophy, 
   RotateCcw, 
@@ -25,6 +25,22 @@ export const ResultModal: React.FC<ResultModalProps> = ({
   onViewLeaderboard,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
+
+  // Keyboard navigation: Tab / Enter restarts immediately, Escape closes
+  useEffect(() => {
+    if (!result) return;
+    const handleModalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab' || e.key === 'Enter') {
+        e.preventDefault();
+        onRestart();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleModalKeyDown);
+    return () => window.removeEventListener('keydown', handleModalKeyDown);
+  }, [result, onRestart, onClose]);
 
   if (!result) return null;
 

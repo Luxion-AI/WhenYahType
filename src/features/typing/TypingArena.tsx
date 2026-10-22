@@ -16,6 +16,7 @@ interface TypingArenaProps {
   onModeChange: (m: Mode) => void;
   settings: TypingSettings;
   onRunComplete: (result: RunResult) => void;
+  resetTrigger?: number;
 }
 
 export const TypingArena: React.FC<TypingArenaProps> = ({
@@ -25,6 +26,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   onModeChange,
   settings,
   onRunComplete,
+  resetTrigger = 0,
 }) => {
   const { user, isGuest, isConfigured } = useAuth();
 
@@ -98,10 +100,10 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     });
   }, [activeDuration, settings.soundEnabled, settings.soundVolume, fetchNewTicket]);
 
-  // Change duration or mode
+  // Change duration or mode, or external reset trigger
   useEffect(() => {
     resetRun();
-  }, [duration, mode, resetRun]);
+  }, [duration, mode, resetTrigger, resetRun]);
 
   // Handle run completion
   const handleFinish = useCallback(async (finalTyped: string, startMs: number, endMs: number) => {

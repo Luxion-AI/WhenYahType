@@ -470,34 +470,52 @@ html, body {
 }
 
 /* ==========================================================================
-   WAIFU COMPANION PIXEL BOX
+   WAIFU COMPANION PIXEL BOX (HERO DISPLAY)
    ========================================================================== */
 .waifu-companion-pixel-box {
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  align-items: stretch;
+  gap: 1.5rem;
   background-color: var(--bg-card);
   border: 3px solid var(--pixel-border-color);
   box-shadow: var(--pixel-shadow-md);
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   position: relative;
-  background: linear-gradient(135deg, rgba(20, 24, 38, 0.95) 0%, rgba(30, 20, 36, 0.95) 100%);
+  background: linear-gradient(135deg, rgba(20, 24, 38, 0.98) 0%, rgba(36, 18, 38, 0.98) 100%);
+  transition: all 200ms ease;
+}
+
+.waifu-mode-large .waifu-frame {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.waifu-mode-large .waifu-pixel-border {
+  width: 100%;
+  height: 220px;
+}
+
+.waifu-mode-compact .waifu-frame {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.waifu-mode-compact .waifu-pixel-border {
+  width: 100px;
+  height: 100px;
 }
 
 .waifu-frame {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex-shrink: 0;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .waifu-pixel-border {
-  width: 76px;
-  height: 76px;
   border: 3px solid var(--accent-waifu-pink);
-  box-shadow: var(--pixel-shadow-md);
-  background-color: #000;
+  box-shadow: 4px 4px 0px #000;
+  background-color: #07090e;
   overflow: hidden;
   position: relative;
 }
@@ -508,97 +526,178 @@ html, body {
   object-fit: cover;
   object-position: top center;
   image-rendering: auto;
-  transition: transform 200ms ease;
+  transition: transform 300ms ease;
+  display: block;
 }
 
 .waifu-frame:hover .waifu-avatar-img {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
-.waifu-label-pill {
+/* Corner Pixel Badges on Waifu Frame */
+.corner-pixel {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-gold);
+  z-index: 2;
+}
+
+.corner-tl { top: 0; left: 0; }
+.corner-tr { top: 0; right: 0; }
+.corner-bl { bottom: 0; left: 0; }
+.corner-br { bottom: 0; right: 0; }
+
+.waifu-overlay-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10, 12, 18, 0.85);
+  backdrop-filter: blur(4px);
+  border-top: 2px solid var(--accent-waifu-pink);
+  padding: 0.35rem 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  justify-content: center;
+  gap: 0.4rem;
   font-family: var(--font-pixel);
-  font-size: 0.55rem;
+  font-size: 0.62rem;
+  color: #fff;
+  z-index: 3;
+}
+
+.text-waifu {
   color: var(--accent-waifu-pink);
-  background-color: var(--bg-input);
-  border: 1px solid var(--accent-waifu-pink);
-  padding: 0.2rem 0.45rem;
-  max-width: 90px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.heart-pulse {
-  animation: pulse-heart 1.2s infinite ease-in-out;
+.waifu-source-tag {
+  font-family: var(--font-retro);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  text-align: center;
+  letter-spacing: 0.05em;
 }
 
-@keyframes pulse-heart {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-}
-
+/* Retro Pixel Speech & Command Center */
 .waifu-speech-bubble {
   flex: 1;
   background-color: var(--bg-input);
-  border: 2px solid var(--pixel-border-color);
-  box-shadow: var(--pixel-shadow-sm);
-  padding: 0.75rem 1rem;
-  position: relative;
+  border: 3px solid var(--pixel-border-color);
+  box-shadow: 4px 4px 0px #000;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 220px;
 }
 
 .speech-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px dashed rgba(255, 42, 133, 0.3);
 }
 
 .speech-tag {
   font-family: var(--font-pixel);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   color: var(--accent-waifu-pink);
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
+  letter-spacing: 0.05em;
 }
 
-.speech-source {
-  font-family: var(--font-retro);
-  font-size: 0.65rem;
-  color: var(--text-dim);
+.waifu-mini-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-pixel-icon {
+  background-color: var(--bg-card);
+  border: 2px solid var(--pixel-border-color);
+  box-shadow: 2px 2px 0px #000;
+  color: var(--text-main);
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  transition: all 100ms ease;
+}
+
+.btn-pixel-icon:hover:not(:disabled) {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000;
+}
+
+.btn-pixel-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.speech-content-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
 }
 
 .speech-text {
   font-family: var(--font-retro);
-  font-size: 0.95rem;
-  color: var(--text-main);
-  line-height: 1.4;
+  font-size: 1.15rem;
+  color: #fff;
+  line-height: 1.5;
   letter-spacing: 0.02em;
 }
 
-.speech-metrics-pill {
-  margin-top: 0.2rem;
+.waifu-telemetry-row {
+  padding-top: 0.6rem;
+  border-top: 2px dashed rgba(255, 255, 255, 0.08);
 }
 
-.live-stat-badge {
+.telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-pixel);
-  font-size: 0.6rem;
-  color: var(--accent-neon-cyan);
-  background-color: rgba(0, 240, 255, 0.1);
-  border: 1px solid var(--accent-neon-cyan);
-  padding: 0.15rem 0.5rem;
+  font-size: 0.62rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid transparent;
 }
 
-.waifu-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+.telemetry-pill.live {
+  color: var(--accent-neon-cyan);
+  background-color: rgba(0, 240, 255, 0.08);
+  border-color: var(--accent-neon-cyan);
+}
+
+.telemetry-pill.finished {
+  color: var(--accent-gold);
+  background-color: rgba(255, 212, 59, 0.08);
+  border-color: var(--accent-gold);
+}
+
+.telemetry-pill.idle {
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.kbd-shortcut-mini {
+  background-color: #000;
+  border: 1px solid var(--accent-gold);
+  color: var(--accent-gold);
+  padding: 0.1rem 0.3rem;
+  font-size: 0.55rem;
 }
 
 .waifu-collapsed-bar {
@@ -1683,7 +1782,14 @@ input:checked + .slider:before {
   }
   .waifu-companion-pixel-box {
     flex-direction: column;
-    text-align: center;
+    align-items: center;
+  }
+  .waifu-mode-large .waifu-frame {
+    width: 100%;
+    max-width: 260px;
+  }
+  .waifu-mode-large .waifu-pixel-border {
+    height: 200px;
   }
   .daily-hero-card {
     grid-template-columns: 1fr;
