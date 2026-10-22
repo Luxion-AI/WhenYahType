@@ -23,8 +23,8 @@ A competitive, minimalist typing arena built entirely around typing the phrase *
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ### 🌐 Live Production Application
-- **Live Website:** [https://luxion-ai.github.io/WhenYahType/](https://luxion-ai.github.io/WhenYahType/)
-- **Netlify Mirror:** [http://heroic-dusk-1b8d26.netlify.app](http://heroic-dusk-1b8d26.netlify.app) *(Default password: `My-Drop-Site`)*
+- **Production Website:** [https://whenyahtype.netlify.app](https://whenyahtype.netlify.app)
+- **Supabase Project:** `kmzamsfgbqkmhqabziqr` (ap-southeast-1)
 
 </div>
 
