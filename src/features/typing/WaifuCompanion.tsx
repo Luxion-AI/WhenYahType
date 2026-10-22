@@ -1,7 +1,21 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Sparkles, Eye, EyeOff, Maximize2, Minimize2, Image as ImageIcon, Flame, Heart, RefreshCw } from 'lucide-react';
+import { 
+  Sparkles, 
+  Eye, 
+  EyeOff, 
+  Columns, 
+  Rows, 
+  Image as ImageIcon, 
+  Flame, 
+  Heart, 
+  RefreshCw,
+  Maximize,
+  Minimize
+} from 'lucide-react';
 
 export type CompanionEmotion = 'idle' | 'cheer' | 'panic' | 'victory';
+export type LayoutMode = 'auto' | 'side-by-side' | 'up-by-low';
+export type FitMode = 'contain' | 'cover';
 
 interface WaifuCompanionProps {
   isRunning: boolean;
@@ -19,23 +33,56 @@ interface ExternalWaifu {
   url: string;
   source: string;
   name: string;
+  orientation?: 'portrait' | 'landscape';
+  width?: number;
+  height?: number;
 }
 
 const DEFAULT_EXTERNAL_WAIFUS: ExternalWaifu[] = [
-  {
-    url: 'https://konachan.net/sample/cb0405e90a962078d985c05846114bfa/Konachan.com%20-%20409854%20sample%20animal%20bird%20brown_hair%20chinese_clothes%20clouds%20grass%20kusuriya_no_hitorigoto%20maomao_%28kusuriya_no_hitorigoto%29%20purple_eyes%20sky%20sunset%20yurun_%28yurun_ume%29.jpg',
-    source: 'konachan.net',
-    name: 'Maomao-chan',
-  },
-  {
-    url: 'https://safebooru.org/images/1365/e56b5a2f40614c291108f37df991ca52.png',
-    source: 'safebooru.org',
-    name: 'Agnes Tachyon',
-  },
+  // 1. Portrait - Aqua-hime (Safebooru) -> Side-by-Side (Image on left, cheering text on right)
   {
     url: 'https://safebooru.org/images/1365/4a36d78b3c9413f0854bec1c9687a180.jpeg',
     source: 'safebooru.org',
     name: 'Aqua-hime',
+    orientation: 'portrait',
+    width: 1061,
+    height: 1500,
+  },
+  // 2. Landscape - Maomao (Konachan) -> Up-by-Low (Image on top, cheering text underneath)
+  {
+    url: 'https://konachan.net/sample/cb0405e90a962078d985c05846114bfa/Konachan.com%20-%20409854%20sample%20animal%20bird%20brown_hair%20chinese_clothes%20clouds%20grass%20kusuriya_no_hitorigoto%20maomao_%28kusuriya_no_hitorigoto%29%20purple_eyes%20sky%20sunset%20yurun_%28yurun_ume%29.jpg',
+    source: 'konachan.net',
+    name: 'Maomao-chan',
+    orientation: 'landscape',
+    width: 3000,
+    height: 1747,
+  },
+  // 3. Landscape - August von Parseval (Konachan)
+  {
+    url: 'https://konachan.net/sample/71ec6d8be6131ac44eb52af0dcc33fbb/Konachan.com%20-%20409851%20sample%20anthropomorphism%20august_von_parseval_%28azur_lane%29%20azur_lane%20barefoot%20black_hair%20blue_eyes%20breasts%20car%20cleavage%20dress%20horns%20junwu%20long_hair%20wristwear.jpg',
+    source: 'konachan.net',
+    name: 'Parseval',
+    orientation: 'landscape',
+    width: 3000,
+    height: 1800,
+  },
+  // 4. Portrait - Agnes Tachyon (Safebooru)
+  {
+    url: 'https://safebooru.org/images/1365/e56b5a2f40614c291108f37df991ca52.png',
+    source: 'safebooru.org',
+    name: 'Agnes Tachyon',
+    orientation: 'portrait',
+    width: 828,
+    height: 1792,
+  },
+  // 5. Portrait - Sparkle Idol (Safebooru)
+  {
+    url: 'https://safebooru.org/images/1365/5a596ae8c622d9d11e7f3f6f62fa0687.jpeg',
+    source: 'safebooru.org',
+    name: 'Sparkle-chan',
+    orientation: 'portrait',
+    width: 900,
+    height: 1200,
   },
 ];
 
@@ -50,15 +97,29 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
   bestCombo = 0,
   isPersonalBest = false,
 }) => {
-  // Mode: 'mascot' (local original Yah-chan pixel sprite) vs 'booru' (external anime gallery)
-  const [companionMode, setCompanionMode] = useState<'mascot' | 'booru'>('mascot');
+  // Default to 'booru' mode for big high-res waifu art, with instant toggle to 'mascot'
+  const [companionMode, setCompanionMode] = useState<'booru' | 'mascot'>('booru');
   const [externalWaifus, setExternalWaifus] = useState<ExternalWaifu[]>(DEFAULT_EXTERNAL_WAIFUS);
   const [externalIndex, setExternalIndex] = useState<number>(0);
   const [loadingExternal, setLoadingExternal] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(true);
-  const [isLarge, setIsLarge] = useState<boolean>(true); // Big waifu frame default as requested
+  const [layoutOverride, setLayoutOverride] = useState<LayoutMode>('auto');
+  const [fitMode, setFitMode] = useState<FitMode>('contain');
+
   const prevErrorsRef = useRef<number>(errors);
   const [recentErrorPanic, setRecentErrorPanic] = useState<boolean>(false);
+
+  const currentExternal = externalWaifus[externalIndex] || DEFAULT_EXTERNAL_WAIFUS[0];
+  const [detectedOrientation, setDetectedOrientation] = useState<'portrait' | 'landscape'>(
+    currentExternal.orientation || 'landscape'
+  );
+
+  // When externalIndex changes, sync detected orientation if already known
+  useEffect(() => {
+    if (currentExternal.orientation) {
+      setDetectedOrientation(currentExternal.orientation);
+    }
+  }, [currentExternal]);
 
   // Detect sudden error surge to trigger momentary panic emotion
   useEffect(() => {
@@ -103,6 +164,31 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
     }
   }, [emotion]);
 
+  // Image load handler to detect actual rendered aspect ratio
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      // Portrait: height is noticeably greater than width
+      // Landscape: width >= height
+      const isPort = naturalHeight > naturalWidth * 1.08;
+      setDetectedOrientation(isPort ? 'portrait' : 'landscape');
+    }
+  };
+
+  // Determine effective layout:
+  // If auto: portrait -> 'side-by-side', landscape -> 'up-by-low'
+  const effectiveLayout: 'side-by-side' | 'up-by-low' = useMemo(() => {
+    if (layoutOverride === 'side-by-side') return 'side-by-side';
+    if (layoutOverride === 'up-by-low') return 'up-by-low';
+
+    // Auto behavior requested by user:
+    // "kalau image nya potrait buat side by side kalau gmabarnya landscape itu up by low"
+    if (companionMode === 'mascot') {
+      return 'side-by-side'; // Mascot is square/portrait, looks best side-by-side
+    }
+    return detectedOrientation === 'portrait' ? 'side-by-side' : 'up-by-low';
+  }, [layoutOverride, detectedOrientation, companionMode]);
+
   // Emotion badges and status subtitles
   const emotionBadge = useMemo(() => {
     switch (emotion) {
@@ -128,7 +214,7 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
         return `ANATA WA KAMI KA?! 🔥 ${wpm} WPM! Superhuman speed! Certified When Yah Legend!`;
       }
       if (wpm >= 80) {
-        return `Otsukaresama! ${wpm} WPM with a best combo of ${bestCombo}! That was blistering fast! ✨`;
+        return `Otsukaresama! ${wpm} WPM with a best combo of ${bestCombo}! Blistering fast! ✨`;
       }
       if (wpm >= 50) {
         return `Sugoi! ${phraseCount} When Yahs delivered! Your keyboard discipline is solid! 💪`;
@@ -158,26 +244,45 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
     return "Ganbatte, runner-kun! Type 'When Yah' to ignite the arcade! Tab to quick-restart anytime! 💕";
   }, [isFinished, isRunning, recentErrorPanic, combo, bestCombo, wpm, phraseCount, isPersonalBest]);
 
-  // Fetch more external waifus if in Booru mode
+  // Fetch more external waifus from booru APIs
   const fetchMoreExternal = async () => {
     setLoadingExternal(true);
     try {
-      const isKonachan = Math.random() > 0.5;
-      const endpoint = isKonachan
-        ? 'https://konachan.net/post.json?limit=10&tags=rating:s'
-        : 'https://safebooru.org/index.php?page=dapi&s=post&q=index&json=1&limit=10&tags=solo+rating:safe';
+      const rand = Math.random();
+      let endpoint = '';
+      let sourceName = '';
+
+      if (rand < 0.4) {
+        // Konachan (often high quality wallpapers / landscapes)
+        endpoint = 'https://konachan.net/post.json?limit=10&tags=rating:s';
+        sourceName = 'konachan.net';
+      } else if (rand < 0.75) {
+        // Yande.re (high quality portraits and full body art)
+        endpoint = 'https://yande.re/post.json?limit=10&tags=rating:s';
+        sourceName = 'yande.re';
+      } else {
+        // Safebooru
+        endpoint = 'https://safebooru.org/index.php?page=dapi&s=post&q=index&json=1&limit=10&tags=solo+rating:safe';
+        sourceName = 'safebooru.org';
+      }
 
       const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          const fresh = data
-            .map((p: { sample_url?: string; preview_url?: string; file_url?: string }) => {
+          const fresh: ExternalWaifu[] = data
+            .map((p: { sample_url?: string; file_url?: string; preview_url?: string; width?: number; height?: number }) => {
               const url = p.sample_url || p.file_url || p.preview_url || '';
+              const width = p.width || 0;
+              const height = p.height || 0;
+              const orientation: 'portrait' | 'landscape' = height > width ? 'portrait' : 'landscape';
               return {
                 url,
-                source: isKonachan ? 'konachan.net' : 'safebooru.org',
+                source: sourceName,
                 name: `Waifu #${Math.floor(100 + Math.random() * 900)}`,
+                orientation,
+                width,
+                height,
               };
             })
             .filter((p) => p.url.length > 0);
@@ -189,6 +294,7 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
         }
       }
     } catch {
+      // Cycle through existing if network issue
       setExternalIndex((prev) => (prev + 1) % externalWaifus.length);
     } finally {
       setLoadingExternal(false);
@@ -203,7 +309,12 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
     }
   };
 
-  const currentExternal = externalWaifus[externalIndex] || DEFAULT_EXTERNAL_WAIFUS[0];
+  // Cycle layout override: auto -> side-by-side -> up-by-low -> auto
+  const cycleLayout = () => {
+    if (layoutOverride === 'auto') setLayoutOverride('side-by-side');
+    else if (layoutOverride === 'side-by-side') setLayoutOverride('up-by-low');
+    else setLayoutOverride('auto');
+  };
 
   if (!visible) {
     return (
@@ -222,8 +333,11 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
   }
 
   return (
-    <div className={`companion-stage ${isLarge ? 'stage-large' : 'stage-compact'} emotion-${emotion}`}>
-      {/* Visual Character Frame */}
+    <div
+      className={`companion-stage layout-${effectiveLayout} fit-${fitMode} emotion-${emotion}`}
+      data-orientation={detectedOrientation}
+    >
+      {/* Visual Character Frame (GIANT DISPLAY) */}
       <div className="companion-portrait-frame">
         <div className="companion-pixel-border">
           {/* Pixel Corner Studs */}
@@ -241,6 +355,7 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
                 className="mascot-pixel-img"
                 loading="eager"
                 draggable={false}
+                onLoad={handleImageLoad}
               />
               <div className="mascot-nameplate">
                 <Heart size={11} className="heart-pulse text-waifu" />
@@ -250,12 +365,19 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
             </div>
           ) : (
             <div className="external-waifu-container">
+              {/* Ambient blurred backdrop for letterbox areas */}
+              <div
+                className="external-avatar-backdrop"
+                style={{ backgroundImage: `url(${currentExternal.url})` }}
+              />
+
               <img
                 src={currentExternal.url}
                 alt={currentExternal.name}
-                className="external-avatar-img"
+                className={`external-avatar-img fit-${fitMode}`}
                 loading="eager"
                 referrerPolicy="no-referrer"
+                onLoad={handleImageLoad}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   if (target.src !== DEFAULT_EXTERNAL_WAIFUS[0].url) {
@@ -266,35 +388,37 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
               <div className="mascot-nameplate">
                 <Heart size={11} className="heart-pulse text-waifu" />
                 <span>{currentExternal.name}</span>
-                <span className="source-label">{currentExternal.source}</span>
+                <span className="source-label">
+                  [{currentExternal.source}] · {detectedOrientation.toUpperCase()}
+                </span>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Arcade Dialogue & Command Deck */}
+      {/* Teks Penyemangat & Command Deck (Positioned below image in landscape, side-by-side in portrait) */}
       <div className="companion-dialogue-deck">
         <div className="deck-header-row">
           <div className="deck-title-tag">
             <Sparkles size={13} className="text-arcade-gold" />
             <span className="deck-tag-text">
-              {companionMode === 'mascot' ? '★ ARCADE CHEERLEADER ★' : '★ WAIFU GALLERY ★'}
+              {companionMode === 'mascot' ? '★ ARCADE CHEERLEADER ★' : '★ WAIFU COMPANION ★'}
             </span>
           </div>
 
           {/* Quick Arcade Controls */}
           <div className="deck-controls">
-            {/* Mode Toggle: Mascot vs Booru */}
+            {/* Mode Toggle: Booru vs Pixel */}
             <button
               type="button"
-              className={`btn-pixel-icon ${companionMode === 'mascot' ? 'btn-active' : ''}`}
-              onClick={() => setCompanionMode(companionMode === 'mascot' ? 'booru' : 'mascot')}
-              title={companionMode === 'mascot' ? 'Switch to Anime Booru Gallery' : 'Switch to Original Pixel Yah-chan'}
+              className={`btn-pixel-icon ${companionMode === 'booru' ? 'btn-active' : ''}`}
+              onClick={() => setCompanionMode(companionMode === 'booru' ? 'mascot' : 'booru')}
+              title={companionMode === 'booru' ? 'Switch to Pixel Yah-chan' : 'Switch to High-Res Waifu Art'}
             >
               <ImageIcon size={13} />
               <span className="btn-label-text">
-                {companionMode === 'mascot' ? 'PIXEL' : 'BOORU'}
+                {companionMode === 'booru' ? 'BOORU' : 'PIXEL'}
               </span>
             </button>
 
@@ -304,23 +428,42 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
                 className="btn-pixel-icon"
                 onClick={handleNextExternal}
                 disabled={loadingExternal}
-                title="Reroll Artwork"
+                title="Reroll Artwork from yande.re / konachan / safebooru"
               >
                 <RefreshCw size={13} className={loadingExternal ? 'spin' : ''} />
                 <span className="btn-label-text">REROLL</span>
               </button>
             )}
 
-            {/* Size Toggle (Large/Compact) */}
+            {/* Layout Toggle: Auto / Side / Stack */}
             <button
               type="button"
               className="btn-pixel-icon"
-              onClick={() => setIsLarge(!isLarge)}
-              title={isLarge ? 'Compact View' : 'Large View'}
+              onClick={cycleLayout}
+              title={`Layout: ${layoutOverride.toUpperCase()} (Click to toggle)`}
             >
-              {isLarge ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-              <span className="btn-label-text">{isLarge ? 'COMPACT' : 'LARGE'}</span>
+              {effectiveLayout === 'side-by-side' ? <Columns size={13} /> : <Rows size={13} />}
+              <span className="btn-label-text">
+                {layoutOverride === 'auto'
+                  ? `AUTO (${effectiveLayout === 'side-by-side' ? 'SIDE' : 'STACK'})`
+                  : layoutOverride === 'side-by-side'
+                  ? 'SIDE'
+                  : 'STACK'}
+              </span>
             </button>
+
+            {/* Image Fit Toggle: Contain / Cover */}
+            {companionMode === 'booru' && (
+              <button
+                type="button"
+                className="btn-pixel-icon"
+                onClick={() => setFitMode(fitMode === 'contain' ? 'cover' : 'contain')}
+                title={fitMode === 'contain' ? 'Switch to Cover Fit' : 'Switch to Full Contain Fit'}
+              >
+                {fitMode === 'contain' ? <Maximize size={13} /> : <Minimize size={13} />}
+                <span className="btn-label-text">{fitMode === 'contain' ? 'FIT: ALL' : 'FIT: CROP'}</span>
+              </button>
+            )}
 
             {/* Hide Toggle */}
             <button
@@ -334,7 +477,7 @@ export const WaifuCompanion: React.FC<WaifuCompanionProps> = ({
           </div>
         </div>
 
-        {/* Dynamic dialogue text bubble */}
+        {/* Dynamic dialogue / cheering text ("teks penyemangat") */}
         <div className="speech-balloon">
           <p className="speech-quote">"{dialogue}"</p>
         </div>
