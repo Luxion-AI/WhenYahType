@@ -33,6 +33,19 @@ export function saveSettings(settings: TypingSettings): void {
   }
 }
 
+export function getGuestId(): string {
+  try {
+    let id = localStorage.getItem('wyt_guest_uuid_v1');
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      id = crypto.randomUUID();
+      localStorage.setItem('wyt_guest_uuid_v1', id);
+    }
+    return id;
+  } catch {
+    return '00000000-0000-4000-a000-000000000001';
+  }
+}
+
 export function getGuestUsername(): string {
   try {
     let name = localStorage.getItem(STORAGE_KEYS.GUEST_USERNAME);

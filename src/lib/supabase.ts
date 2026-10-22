@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Duration, Mode, RunTicket, LeaderboardEntry, UserProfile, Achievement } from '../types/typing';
+import { getGuestId, getGuestUsername, getLocalRuns } from './storage';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -22,12 +23,11 @@ export async function requestRunTicket(mode: Mode, duration: Duration): Promise<
   if (!supabase) return null;
 
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-    if (!token) return null;
+    const guestId = getGuestId();
+    const guestUsername = getGuestUsername();
 
     const res = await supabase.functions.invoke('issue-ticket', {
-      body: { mode, duration },
+      body: { mode, duration, guestId, guestUsername },
     });
 
     if (res.error || !res.data?.ok) {
@@ -69,8 +69,11 @@ export async function submitRunScore(params: {
   }
 
   try {
+    const guestId = getGuestId();
+    const guestUsername = getGuestUsername();
+
     const res = await supabase.functions.invoke('submit-score', {
-      body: params,
+      body: { ...params, guestId, guestUsername },
     });
 
     if (res.error) {
@@ -137,19 +140,60 @@ export async function fetchLeaderboard(
     }
 
     const { data, error } = await query;
-    if (error || !data) return [];
+    let list: LeaderboardEntry[] = [];
+    if (!error && data) {
+      list = data.map((item) => ({
+        run_id: item.id,
+        user_id: item.user_id,
+        username: item.username,
+        duration: item.duration as Duration,
+        wpm: item.wpm,
+        raw_wpm: item.raw_wpm,
+        accuracy: item.accuracy,
+        phrase_count: item.phrase_count,
+        seed: item.seed,
+        created_at: item.created_at,
+        rank: 0,
+      }));
+    }
 
-    return data.map((item, idx) => ({
-      run_id: item.id,
-      user_id: item.user_id,
-      username: item.username,
-      duration: item.duration as Duration,
-      wpm: item.wpm,
-      raw_wpm: item.raw_wpm,
-      accuracy: item.accuracy,
-      phrase_count: item.phrase_count,
-      seed: item.seed,
-      created_at: item.created_at,
+    // Merge current user's local runs if matching criteria and not already present in list
+    const currentGuestUsername = getGuestUsername();
+    const localRuns = getLocalRuns();
+    const matchingLocal = localRuns
+      .filter((r) => r.duration === duration && (type === 'daily' ? r.mode === 'daily' : r.mode === 'classic'))
+      .sort((a, b) => b.wpm - a.wpm);
+
+    if (matchingLocal.length > 0) {
+      const bestLocal = matchingLocal[0];
+      const alreadyInList = list.some((e) => e.username === currentGuestUsername && e.wpm === bestLocal.wpm);
+      if (!alreadyInList) {
+        list.push({
+          run_id: bestLocal.runId || 'local-' + Date.now(),
+          user_id: getGuestId(),
+          username: currentGuestUsername,
+          duration: bestLocal.duration,
+          wpm: bestLocal.wpm,
+          raw_wpm: bestLocal.rawWpm,
+          accuracy: bestLocal.accuracy,
+          phrase_count: bestLocal.phraseCount,
+          seed: type === 'daily' ? (dailySeed || new Date().toISOString().slice(0, 10)) : 'classic-v1',
+          created_at: bestLocal.createdAt,
+          rank: 0,
+        });
+      }
+    }
+
+    // Sort by WPM desc -> accuracy desc -> created_at asc
+    list.sort((a, b) => {
+      if (b.wpm !== a.wpm) return b.wpm - a.wpm;
+      if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+
+    // Assign final authoritative ranks
+    return list.slice(0, 50).map((item, idx) => ({
+      ...item,
       rank: idx + 1,
     }));
   } catch (err) {

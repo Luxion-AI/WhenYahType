@@ -28,7 +28,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
   onRunComplete,
   resetTrigger = 0,
 }) => {
-  const { user, isGuest, isConfigured } = useAuth();
+  const { isConfigured } = useAuth();
 
   const [typed, setTyped] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -63,9 +63,9 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     return generateTargetText(3200, seedNumber);
   }, [seedNumber]);
 
-  // Fetch ticket when configuration changes or restart
+  // Fetch ticket when configuration changes or restart (works for all players: guests and logged-in)
   const fetchNewTicket = useCallback(async () => {
-    if (!isConfigured || !user || isGuest) {
+    if (!isConfigured) {
       setTicket(null);
       return;
     }
@@ -73,7 +73,7 @@ export const TypingArena: React.FC<TypingArenaProps> = ({
     const newTicket = await requestRunTicket(mode, activeDuration);
     setTicket(newTicket);
     setTicketLoading(false);
-  }, [isConfigured, user, isGuest, mode, activeDuration]);
+  }, [isConfigured, mode, activeDuration]);
 
   // Reset run
   const resetRun = useCallback(() => {

@@ -1,8 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from '../_shared/cors.ts';
-import { getTodayUTC } from '../_shared/generator.ts';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+};
 
 const DURATIONS = [15, 30, 60, 120];
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function getTodayUTC(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,24 +23,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return Response.json({ ok: false, error: 'Sign-in required' }, { status: 401, headers: corsHeaders });
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
-      return Response.json({ ok: false, error: 'Invalid or expired session' }, { status: 401, headers: corsHeaders });
-    }
-
+    const authHeader = req.headers.get('Authorization');
     const body = await req.json().catch(() => ({}));
     const duration = Number(body.duration);
     const mode = String(body.mode || 'classic');
@@ -44,6 +40,26 @@ Deno.serve(async (req) => {
       return Response.json({ ok: false, error: 'Invalid mode' }, { status: 400, headers: corsHeaders });
     }
 
+    // Resolve user ID: either from authenticated session or persistent guest ID
+    let effectiveUserId: string | null = null;
+    if (authHeader && authHeader !== `Bearer ${supabaseAnonKey}`) {
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        effectiveUserId = user.id;
+      }
+    }
+
+    if (!effectiveUserId) {
+      if (body.guestId && UUID_REGEX.test(body.guestId)) {
+        effectiveUserId = body.guestId;
+      } else {
+        effectiveUserId = crypto.randomUUID();
+      }
+    }
+
     const seed = mode === 'daily' ? getTodayUTC() : 'classic-v1';
     // Allow duration seconds + 45s grace period for client typing, network, and submission
     const expiresAt = new Date(Date.now() + (duration + 45) * 1000).toISOString();
@@ -52,7 +68,7 @@ Deno.serve(async (req) => {
     const { data: ticket, error: ticketError } = await adminClient
       .from('run_tickets')
       .insert({
-        user_id: user.id,
+        user_id: effectiveUserId,
         mode,
         duration,
         seed,

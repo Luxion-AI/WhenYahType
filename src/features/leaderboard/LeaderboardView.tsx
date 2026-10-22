@@ -132,6 +132,38 @@ export const LeaderboardView: React.FC<{
         </div>
       )}
 
+      {/* User's Best / Position Card if present */}
+      {(() => {
+        const myEntry = entries.find((e) => e.username.toLowerCase() === currentUsername.toLowerCase());
+        if (!myEntry) return null;
+        return (
+          <div className="my-rank-banner">
+            <div className="my-rank-left">
+              <span className="my-rank-tag">★ YOUR OFFICIAL POSITION ★</span>
+              <div className="my-rank-details">
+                <span className="my-rank-pos">#{myEntry.rank}</span>
+                <span className="my-rank-username">{myEntry.username}</span>
+                <span className="my-rank-badge verified">Verified</span>
+              </div>
+            </div>
+            <div className="my-rank-stats">
+              <div className="stat-unit">
+                <span className="stat-val">{myEntry.wpm}</span>
+                <span className="stat-lbl">WPM</span>
+              </div>
+              <div className="stat-unit">
+                <span className="stat-val">{myEntry.accuracy}%</span>
+                <span className="stat-lbl">ACC</span>
+              </div>
+              <div className="stat-unit">
+                <span className="stat-val">{myEntry.phrase_count}</span>
+                <span className="stat-lbl">YAHS</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Table / Results */}
       <div className="table-card">
         {loading ? (
